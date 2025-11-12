@@ -1,5 +1,5 @@
 """
-糖尿病预测项目 - Streamlit数据探索页面
+糖尿病预测项目 - Streamlit数据观测
 作者: 成员A
 功能: 交互式数据可视化探索
 """
@@ -18,7 +18,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
-# ============ 关键修复：配置中文字体 ============
+# ============ 配置中文字体 ============
 def setup_chinese_font():
     """配置中文字体 - 每次绘图前调用"""
     fm._load_fontmanager(try_read_cache=False)
@@ -305,14 +305,15 @@ def main():
         st.stop()
 
     # 导航标签
-    tab1, tab2, tab3, tab4 = st.tabs([
-        "📋 数据概览",
-        "📈 单变量分析",
-        "🔄 双变量分析",
-        "🔗 相关性分析"
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "数据概览",
+        "单变量分析",
+        "双变量分析",
+        "相关性分析",
+        "风险因素排序"  # 新增
     ])
 
-    # ==================== Tab 1: 数据概览 ====================
+    # ==================== Tab 1: 数据概览 =====================
     with tab1:
         st.markdown("### 📌 核心指标")
 
@@ -525,7 +526,8 @@ def main():
             </div>
             """, unsafe_allow_html=True)
 
-    # ==================== Tab 2: 单变量分析 ====================
+
+    # ==================== Tab 2: 单变量分析 ===================
     with tab2:
         st.markdown("### 📈 选择特征进行分析")
 
@@ -656,7 +658,7 @@ def main():
                 </div>
                 """, unsafe_allow_html=True)
 
-    # ==================== Tab 3: 双变量分析 ====================
+    # ==================== Tab 3: 双变量分析 ===================
     with tab3:
         st.markdown("### 🔄 患病 vs 非患病组对比")
 
@@ -780,7 +782,7 @@ def main():
             else:
                 st.warning("⚠️ 请至少选择2个特征进行分析")
 
-    # ==================== Tab 4: 相关性分析 ====================
+    # ==================== Tab 4: 相关性分析 ===================
     with tab4:
         st.markdown("### 🔗 特征相关性分析")
 
@@ -861,6 +863,89 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
+    # ==================== Tab 5: 风险因素排序 =================
+    with tab5:
+        st.markdown("### 🎯 风险因素重要性排序")
+
+        st.info("💡 此模块将展示模型训练后的特征重要性分析")
+
+        # 方法1：从相关系数计算重要性（临时方案）
+        col1, col2 = st.columns([2, 1])
+
+        with col1:
+            st.markdown("#### 📊 基于相关性的特征重要性")
+
+            # 计算特征重要性（使用相关系数的绝对值）
+            feature_importance = df.corr()[viz.target].drop(viz.target).abs().sort_values(ascending=True)
+
+            setup_chinese_font()
+            fig, ax = plt.subplots(figsize=(10, 6))
+            colors = ['#667eea' if x > 0.3 else '#94a3b8' for x in feature_importance]
+            feature_importance.plot(kind='barh', color=colors, ax=ax, alpha=0.8)
+            ax.set_xlabel('重要性分数 (相关系数绝对值)', fontsize=11, fontweight='bold')
+            ax.set_title('特征重要性排序', fontsize=14, fontweight='bold', pad=15)
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            ax.grid(axis='x', alpha=0.3, linestyle='--')
+
+            st.pyplot(fig)
+            plt.close()
+
+        with col2:
+            st.markdown("#### 📋 重要性评分表")
+
+            importance_df = pd.DataFrame({
+                '特征': [viz.feature_names_cn.get(f, f) for f in feature_importance.index],
+                '重要性': feature_importance.values,
+                '等级': ['⭐⭐⭐' if x > 0.4 else '⭐⭐' if x > 0.2 else '⭐'
+                         for x in feature_importance.values]
+            }).sort_values('重要性', ascending=False).reset_index(drop=True)
+
+            st.dataframe(
+                importance_df.style.format({'重要性': '{:.3f}'})
+                .background_gradient(cmap='YlOrRd', subset=['重要性']),
+                use_container_width=True,
+                hide_index=True
+            )
+
+        # 关键发现总结
+        top_feature = feature_importance.index[-1]
+        st.markdown(f"""
+        <div class="success-box">
+            <h4 style="margin-top: 0;">🔬 关键发现</h4>
+            <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                <li><strong>{viz.feature_names_cn.get(top_feature, top_feature)}</strong> 
+                是最重要的风险因素（重要性: {feature_importance.iloc[-1]:.3f}）</li>
+                <li>前3大风险因素占总重要性的 
+                {(feature_importance.iloc[-3:].sum() / feature_importance.sum() * 100):.1f}%</li>
+                <li>建议在临床筛查中优先关注这些高重要性指标</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # 临床意义解读
+        st.markdown("#### 🏥 临床意义解读")
+
+        clinical_notes = {
+            'Glucose': '血糖是糖尿病诊断的金标准指标，空腹血糖≥126mg/dL或餐后2小时血糖≥200mg/dL提示糖尿病',
+            'BMI': 'BMI≥30为肥胖，是糖尿病的重要危险因素，减重可显著降低发病风险',
+            'Age': '年龄每增加10岁，糖尿病风险增加约1.5-2倍，45岁以上人群建议定期筛查',
+            'Pregnancies': '妊娠糖尿病史是2型糖尿病的重要预测因素',
+            'DiabetesPedigreeFunction': '家族遗传史显著增加患病风险，有家族史者需更频繁监测',
+            'BloodPressure': '高血压与糖尿病常伴随出现，两者相互影响',
+            'Insulin': '胰岛素抵抗是2型糖尿病的核心机制',
+            'SkinThickness': '皮下脂肪厚度反映肥胖程度，与代谢综合征相关'
+        }
+
+        for feature in feature_importance.index[::-1]:
+            if feature in clinical_notes:
+                st.markdown(f"""
+                <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; margin: 0.5rem 0;">
+                    <strong>{viz.feature_names_cn.get(feature, feature)}</strong>: 
+                    {clinical_notes[feature]}
+                </div>
+                """, unsafe_allow_html=True)
+
     # 侧边栏
     with st.sidebar:
         st.markdown("### ℹ️ 系统信息")
@@ -890,6 +975,46 @@ def main():
 
         st.markdown("---")
         st.success("✅ 系统运行正常")
+
+        # ==================== 下载功能 ====================
+        st.markdown("---")
+        st.markdown("### 📥 导出数据和图表")
+
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            if st.button("📊 下载统计报告", use_container_width=True):
+                # 生成统计报告
+                report = []
+                report.append("=" * 60)
+                report.append("糖尿病数据集 - 统计分析报告")
+                report.append("=" * 60)
+                report.append(f"\n生成时间: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                report.append(f"\n总样本数: {len(df)}")
+                report.append(f"患病率: {df[viz.target].mean() * 100:.2f}%")
+                report.append(f"\n特征统计:\n{df.describe().to_string()}")
+
+                report_text = "\n".join(report)
+                st.download_button(
+                    label="💾 下载TXT报告",
+                    data=report_text,
+                    file_name="diabetes_analysis_report.txt",
+                    mime="text/plain"
+                )
+
+        with col2:
+            # 导出清洗后的数据
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📋 下载CSV数据",
+                data=csv,
+                file_name="diabetes_data.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+
+        with col3:
+            st.info("💡 离线图表已保存在 `docs/images/` 目录")
 
     # 页脚
     st.markdown("<br><br>", unsafe_allow_html=True)
