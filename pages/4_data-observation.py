@@ -13,6 +13,10 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import seaborn as sns
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import plotly.figure_factory as ff
 import warnings
 
 warnings.filterwarnings('ignore')
@@ -31,8 +35,8 @@ setup_chinese_font()
 
 # 页面配置
 st.set_page_config(
-    page_title="数据探索 - 糖尿病预测",
-    page_icon="📊",
+    page_title="数据可视化分析 - 糖尿病预测",
+    page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -256,9 +260,26 @@ st.markdown("""
 class StreamlitVisualizer:
     """Streamlit数据可视化类"""
 
-    def __init__(self, data_path='./data/raw/diabetes.csv'):
+    def __init__(self, data_path='./src/data/diabetes.csv'):
         """初始化并加载数据"""
-        self.df = pd.read_csv(data_path)
+        try:
+            self.df = pd.read_csv(data_path)
+        except FileNotFoundError:
+            # 尝试其他可能的路径
+            possible_paths = [
+                './data/raw/diabetes.csv',
+                '../data/raw/diabetes.csv',
+                './diabetes.csv',
+                '../diabetes.csv'
+            ]
+            for path in possible_paths:
+                try:
+                    self.df = pd.read_csv(path)
+                    break
+                except FileNotFoundError:
+                    continue
+            else:
+                raise FileNotFoundError("无法找到糖尿病数据集文件")
         self.feature_names = self.df.columns[:-1].tolist()
         self.target = 'Outcome'
 
@@ -275,15 +296,17 @@ class StreamlitVisualizer:
         }
 
 
-def render_metric_card(label, value, delta=None, icon="📊"):
+def render_metric_card(label, value, delta=None, icon="📊", description=""):
     """渲染指标卡片"""
-    delta_html = f'<div class="metric-delta">↑ {delta}</div>' if delta else ''
+    delta_html = f'<div style="color: #10b981; font-size: 0.875rem; font-weight: 600; margin-top: 0.5rem;">↑ {delta}</div>' if delta else ''
+    description_html = f'<div style="color: #6b7280; font-size: 0.75rem; font-weight: 500; margin-top: 0.25rem; font-style: italic;">{description}</div>' if description else ''
     return f"""
     <div class="metric-card">
         <div style="font-size: 2rem; margin-bottom: 0.5rem;">{icon}</div>
         <div class="metric-label">{label}</div>
         <div class="metric-value">{value}</div>
         {delta_html}
+        {description_html}
     </div>
     """
 
@@ -292,12 +315,12 @@ def main():
     """主函数"""
 
     # 页面标题
-    st.markdown('<h1 class="hero-title">📊 数据探索分析</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="hero-title">📈 数据可视化分析</h1>', unsafe_allow_html=True)
     st.markdown('<p class="hero-subtitle">深入了解糖尿病数据集的特征与分布</p>', unsafe_allow_html=True)
 
     # 加载数据
     try:
-        viz = StreamlitVisualizer('./data/raw/diabetes.csv')
+        viz = StreamlitVisualizer()
         df = viz.df
         st.success("✅ 数据加载成功！", icon="✅")
     except Exception as e:
@@ -424,10 +447,18 @@ def main():
 
         # 描述性统计
         st.markdown("### 📊 描述性统计表")
+
+        # 缓存描述性统计
+        @st.cache_data
+        def get_descriptive_stats(dataframe):
+            return dataframe.describe().T
+
+        stats_df = get_descriptive_stats(df)
         st.dataframe(
-            df.describe().T.style.background_gradient(cmap='Blues', subset=['mean', 'std'])
+            stats_df.style.background_gradient(cmap='Blues', subset=['mean', 'std'])
             .format("{:.2f}"),
-            use_container_width=True
+            use_container_width=True,
+            height=400
         )
 
         # 数据质量检查
@@ -948,6 +979,31 @@ def main():
 
     # 侧边栏
     with st.sidebar:
+        # 页面导航
+        st.markdown("""
+        <div style="background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+                    padding: 1rem; border-radius: 12px; margin-bottom: 1rem;">
+            <h4 style="color: #1f2937; margin-bottom: 0.5rem;">📋 页面导航</h4>
+            <div style="padding: 0.5rem; margin: 0.25rem 0;
+                        border-radius: 8px; border-left: 3px solid #667eea;
+                        background: white;">
+                <span style="color: #374151;">📈 当前：数据可视化分析</span>
+            </div>
+            <div style="padding: 0.5rem; margin: 0.25rem 0;
+                        border-radius: 8px; cursor: pointer;
+                        border-left: 3px solid transparent;"
+                        onclick="window.location.href='/?page=interactive_insights'">
+                <span style="color: #374151;">🔍 交互式数据探索</span>
+            </div>
+            <div style="padding: 0.5rem; margin: 0.25rem 0;
+                        border-radius: 8px; cursor: pointer;
+                        border-left: 3px solid transparent;"
+                        onclick="window.location.href='/'">
+                <span style="color: #374151;">🏠 首页</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
         st.markdown("### ℹ️ 系统信息")
         st.markdown(f"""
         <div class="metric-card">
