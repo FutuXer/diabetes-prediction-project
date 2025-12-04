@@ -328,8 +328,9 @@ def main():
         st.stop()
 
     # 导航标签
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "数据概览",
+        "数据预处理",
         "单变量分析",
         "双变量分析",
         "相关性分析",
@@ -557,9 +558,235 @@ def main():
             </div>
             """, unsafe_allow_html=True)
 
-
-    # ==================== Tab 2: 单变量分析 ===================
+    # ==================== Tab 2: 数据预处理 ===================
     with tab2:
+        st.markdown("### 🔍 数据预处理结果")
+
+        # 预处理概览
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("#### 📊 预处理统计")
+
+            # 缺失值处理统计
+            missing_data = {
+                'Insulin': 48.70,
+                'SkinThickness': 29.56,
+                'BloodPressure': 4.56,
+                'BMI': 1.43,
+                'Glucose': 0.65
+            }
+
+            setup_chinese_font()
+            fig, ax = plt.subplots(figsize=(10, 6))
+            colors = ['#ef4444' if x > 20 else '#f59e0b' if x > 5 else '#10b981' for x in missing_data.values()]
+            bars = ax.bar(missing_data.keys(), missing_data.values(), color=colors, alpha=0.7, edgecolor='black', linewidth=1.5)
+
+            ax.set_title('各特征缺失值比例（含0值）', fontsize=14, fontweight='bold', pad=15)
+            ax.set_ylabel('缺失率 (%)', fontsize=12, fontweight='bold')
+            ax.set_xlabel('特征名称', fontsize=12, fontweight='bold')
+
+            # 添加数值标签
+            for bar in bars:
+                height = bar.get_height()
+                ax.text(bar.get_x() + bar.get_width()/2., height,
+                        f'{height:.1f}%', ha='center', va='bottom', fontsize=10, fontweight='bold')
+
+            # 旋转x轴标签
+            plt.xticks(rotation=45, ha='right')
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            ax.grid(axis='y', alpha=0.3, linestyle='--')
+
+            st.pyplot(fig)
+            plt.close()
+
+            st.markdown(f"""
+            <div class="warning-box">
+                <h4 style="margin-top: 0; color: #d97706;">⚠️ 数据质量问题</h4>
+                <p style="margin: 0.5rem 0;"><strong>主要问题：</strong></p>
+                <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                    <li><strong>Insulin</strong>缺失率最高（48.7%），将近一半数据需要处理</li>
+                    <li><strong>SkinThickness</strong>缺失率较高（29.6%），需要重点关注</li>
+                    <li>其他特征缺失率相对较低，但仍有处理价值</li>
+                </ul>
+                <p style="margin: 0.5rem 0; color: #92400e;">
+                    <strong>处理策略：</strong>使用中位数填充，保持数据分布特征
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        with col2:
+            st.markdown("#### 🎯 异常值检测")
+
+            # 异常值统计
+            outlier_data = {
+                'SkinThickness': 87,
+                'Insulin': 72,
+                'DiabetesPedigreeFunction': 29,
+                'Age': 9,
+                'BMI': 8,
+                'BloodPressure': 14,
+                'Pregnancies': 4,
+                'Glucose': 0
+            }
+
+            setup_chinese_font()
+            fig, ax = plt.subplots(figsize=(10, 6))
+            colors = ['#ef4444' if x > 50 else '#f59e0b' if x > 20 else '#10b981' for x in outlier_data.values()]
+            bars = ax.bar(outlier_data.keys(), outlier_data.values(), color=colors, alpha=0.7, edgecolor='black', linewidth=1.5)
+
+            ax.set_title('各特征异常值数量（IQR方法）', fontsize=14, fontweight='bold', pad=15)
+            ax.set_ylabel('异常值数量', fontsize=12, fontweight='bold')
+            ax.set_xlabel('特征名称', fontsize=12, fontweight='bold')
+
+            # 添加数值标签
+            for bar in bars:
+                height = bar.get_height()
+                ax.text(bar.get_x() + bar.get_width()/2., height,
+                        f'{int(height)}', ha='center', va='bottom', fontsize=10, fontweight='bold')
+
+            # 旋转x轴标签
+            plt.xticks(rotation=45, ha='right')
+            ax.spines['top'].set_visible(False)
+            ax.spines['right'].set_visible(False)
+            ax.grid(axis='y', alpha=0.3, linestyle='--')
+
+            st.pyplot(fig)
+            plt.close()
+
+            st.markdown(f"""
+            <div class="info-box">
+                <h4 style="margin-top: 0; color: #1e40af;">📈 异常值分析</h4>
+                <p style="margin: 0.5rem 0;"><strong>统计方法：</strong> IQR（四分位距）方法，超过Q1-1.5×IQR或Q3+1.5×IQR视为异常</p>
+                <p style="margin: 0.5rem 0;"><strong>主要发现：</strong></p>
+                <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                    <li><strong>SkinThickness</strong>异常值最多（87个），可能与测量误差有关</li>
+                    <li><strong>Insulin</strong>异常值较多（72个），存在极值情况</li>
+                    <li><strong>Glucose</strong>无异常值，数据质量较好</li>
+                </ul>
+                <p style="margin: 0.5rem 0; color: #1e40af;">
+                    <strong>处理建议：</strong>医学合理性验证，保留有临床意义的极端值
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # 数据完整性总结
+        st.markdown("---")
+        st.markdown("### 📋 数据质量评估")
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        with col1:
+            st.markdown(render_metric_card(
+                "原始数据完整性",
+                "90.57%",
+                delta="9.43%缺失",
+                icon="📊"
+            ), unsafe_allow_html=True)
+
+        with col2:
+            st.markdown(render_metric_card(
+                "重复行检测",
+                "0",
+                delta="无重复",
+                icon="✅"
+            ), unsafe_allow_html=True)
+
+        with col3:
+            st.markdown(render_metric_card(
+                "异常值总数",
+                "223",
+                delta="需关注",
+                icon="⚠️"
+            ), unsafe_allow_html=True)
+
+        with col4:
+            st.markdown(render_metric_card(
+                "数据质量等级",
+                "良好",
+                delta="可建模",
+                icon="⭐"
+            ), unsafe_allow_html=True)
+
+        # 预处理流程说明
+        st.markdown("---")
+        st.markdown("### 🔄 数据预处理流程")
+
+        st.markdown(f"""
+        <div class="info-box">
+            <h4 style="margin-top: 0; color: #1e40af;">📖 预处理步骤</h4>
+            <p style="margin: 0.5rem 0;"><strong>1️⃣ 缺失值处理：</strong></p>
+            <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                <li>识别生理学不合理的0值（血糖、血压、BMI等）</li>
+                <li>使用中位数或分组均值填充</li>
+                <li>保留原始数据分布特征</li>
+            </ul>
+
+            <p style="margin: 0.5rem 0;"><strong>2️⃣ 异常值检测：</strong></p>
+            <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                <li>IQR方法检测统计异常值</li>
+                <li>医学合理性验证</li>
+                <li>区分测量误差与真实极值</li>
+            </ul>
+
+            <p style="margin: 0.5rem 0;"><strong>3️⃣ 数据标准化：</strong></p>
+            <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                <li>Z-score标准化</li>
+                <li>消除量纲影响</li>
+                <li>为建模做准备</li>
+            </ul>
+
+            <p style="margin: 0.5rem 0; color: #1e40af;">
+                <strong>🎯 预处理目标：</strong>提高数据质量，为后续统计建模提供可靠的数据基础
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # 预处理前后对比（如果有的话）
+        st.markdown("---")
+        st.markdown("### 📈 预处理效果对比")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("#### 处理前数据")
+            before_data = {
+                '总数据单元': 6912,
+                '缺失单元': 652,
+                '完整率': '90.57%',
+                '主要问题': '隐藏零值缺失'
+            }
+
+            for key, value in before_data.items():
+                st.markdown(f"• **{key}**: {value}")
+
+        with col2:
+            st.markdown("#### 处理后数据")
+            after_data = {
+                '总数据单元': 6912,
+                '填充单元': 652,
+                '完整率': '100%',
+                '质量提升': '无缺失值'
+            }
+
+            for key, value in after_data.items():
+                st.markdown(f"• **{key}**: {value}")
+
+        st.markdown(f"""
+        <div class="success-box">
+            <h4 style="margin-top: 0; color: #059669;">✅ 预处理完成</h4>
+            <p style="margin: 0.5rem 0;">
+                <strong>数据质量提升：</strong>从90.57%完整率提升至100%，为后续建模提供了高质量数据基础。
+            </p>
+            <p style="margin: 0.5rem 0;">
+                <strong>下一步：</strong>基于预处理后的数据，可以进行准确的统计建模和特征分析。
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # ==================== Tab 3: 单变量分析 ===================
+    with tab3:
         st.markdown("### 📈 选择特征进行分析")
 
         selected_feature = st.selectbox(
@@ -689,8 +916,8 @@ def main():
                 </div>
                 """, unsafe_allow_html=True)
 
-    # ==================== Tab 3: 双变量分析 ===================
-    with tab3:
+    # ==================== Tab 4: 双变量分析 ===================
+    with tab4:
         st.markdown("### 🔄 患病 vs 非患病组对比")
 
         analysis_type = st.radio(
@@ -813,8 +1040,8 @@ def main():
             else:
                 st.warning("⚠️ 请至少选择2个特征进行分析")
 
-    # ==================== Tab 4: 相关性分析 ===================
-    with tab4:
+    # ==================== Tab 5: 相关性分析 ===================
+    with tab5:
         st.markdown("### 🔗 特征相关性分析")
 
         corr_matrix = df.corr()
@@ -894,8 +1121,8 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
-    # ==================== Tab 5: 风险因素排序 =================
-    with tab5:
+    # ==================== Tab 6: 风险因素排序 =================
+    with tab6:
         st.markdown("### 🎯 风险因素重要性排序")
 
         st.info("💡 此模块将展示模型训练后的特征重要性分析")

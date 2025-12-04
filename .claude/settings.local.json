@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(streamlit run:*)",
+      "Bash(python:*)",
+      "Bash(while read page)",
+      "Bash(do if [ -f \"$page\" ])",
+      "Bash(then echo \"  ✅ $page\")",
+      "Bash(else echo \"  ❌ $page - 缺失\")",
+      "Bash(fi:*)",
+      "Bash(done:*)",
+      "Bash(xargs:*)",
+      "Bash(test:*)",
+      "Bash(for:*)",
+      "Bash(do test:*)",
+      "Bash(echo:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -17,7 +17,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
-# ============ 关键修复：在每个绘图函数中都设置字体 ============
+# ============ 配置中文字体 ============
 def setup_chinese_font():
     """配置中文字体 - 每次绘图前调用"""
     fm._load_fontmanager(try_read_cache=False)
