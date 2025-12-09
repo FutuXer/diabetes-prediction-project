@@ -10,6 +10,8 @@ import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import warnings
+from src.model_predictor import predict_risk, OPTIMAL_THRESHOLD
+import plotly.figure_factory as ff
 
 warnings.filterwarnings('ignore')
 
@@ -108,14 +110,25 @@ def create_risk_gauge(risk_score):
 
     return fig
 
-def get_risk_level(score):
-    """根据评分获取风险等级"""
-    if score < 30:
-        return "低风险", "🟢", "您的糖尿病风险较低，建议保持健康的生活方式"
-    elif score < 70:
-        return "中等风险", "🟡", "您的糖尿病风险中等，建议定期体检并改善生活习惯"
+
+def get_risk_level(score, threshold):  # ✅ 接受 2 个参数
+    """根据风险评分和阈值确定风险等级和建议"""
+
+    # 评分通常是 0-100 的百分比，阈值是 0-1 的小数
+    if score < threshold * 100:
+        risk_level = "低风险"
+        risk_icon = "🟢"
+        risk_advice = "您的风险评分较低，建议保持健康的生活方式，定期体检。"
+    elif score < 70:  # 使用了一个中间值作为中等风险的参考
+        risk_level = "中风险"
+        risk_icon = "🟡"
+        risk_advice = "您的风险评分中等，建议关注各项指标，特别是血糖和BMI，并改善生活习惯。"
     else:
-        return "高风险", "🔴", "您的糖尿病风险较高，建议立即咨询医生进行详细检查"
+        risk_level = "高风险"
+        risk_icon = "🔴"
+        risk_advice = "您的风险评分较高，建议立即咨询医生并进行进一步的医学检查。"
+
+    return risk_level, risk_icon, risk_advice
 
 def main():
     """主函数"""
@@ -247,45 +260,30 @@ def main():
         st.markdown("### 📊 评估结果")
 
         if submitted:
-            # 简单的风险评分计算（示例）
-            # 注意：这里使用简化的计算方法，实际应该使用训练好的模型
+            # 1. 收集原始数据
+            raw_input_data = {
+                'Pregnancies': pregnancies,
+                'Glucose': glucose,
+                'BloodPressure': blood_pressure,
+                'SkinThickness': skin_thickness,
+                'Insulin': insulin,
+                'BMI': bmi,
+                'DiabetesPedigreeFunction': diabetes_pedigree,
+                'Age': age
+            }
 
-            # 基础风险评分
-            risk_score = 20
+            # 2. 调用核心预测函数
+            risk_score, final_prediction, odds_ratios = predict_risk(raw_input_data)
 
-            # 血糖因子
-            if glucose > 140:
-                risk_score += 30
-            elif glucose > 120:
-                risk_score += 15
-            elif glucose > 100:
-                risk_score += 5
+            if risk_score is None:
+                # 预测函数已在内部显示错误，这里直接返回
+                return
 
-            # BMI因子
-            if bmi > 30:
-                risk_score += 20
-            elif bmi > 25:
-                risk_score += 10
-
-            # 年龄因子
-            if age > 60:
-                risk_score += 15
-            elif age > 45:
-                risk_score += 10
-            elif age > 30:
-                risk_score += 5
-
-            # 家族史因子
-            if diabetes_pedigree > 1.0:
-                risk_score += 15
-            elif diabetes_pedigree > 0.5:
-                risk_score += 8
+            # 获取风险等级
+            risk_level, risk_icon, risk_advice = get_risk_level(risk_score, OPTIMAL_THRESHOLD)
 
             # 限制在0-100范围内
             risk_score = min(100, max(0, risk_score))
-
-            # 获取风险等级
-            risk_level, risk_icon, risk_advice = get_risk_level(risk_score)
 
             # 显示结果
             st.markdown(f'<div class="result-card">', unsafe_allow_html=True)
@@ -342,14 +340,27 @@ def main():
             # 详细指标分析
             st.markdown("### 📈 指标分析")
 
-            # 指标对比
-            metrics_data = {
-                '指标': ['血糖', 'BMI', '年龄', '家族史'],
-                '您的值': [glucose, bmi, age, diabetes_pedigree * 50],  # 标准化家族史
-                '正常范围': ['70-100', '18.5-24.9', '<45', '<25']
+            st.markdown(f"基于逻辑回归模型，模型识别出以下关键指标的风险贡献（优势比 **Odds Ratio**）：")
+
+            # 仅展示最重要的几个特征的优势比
+            key_risk_data = {
+                '指标': ['血糖 (Glucose)', '年龄分类 (Age_category_≥40岁)', 'BMI', '家族史 (DiabetesPedigreeFunction)'],
+                '您的值': [glucose, age, bmi, diabetes_pedigree],
+                '优势比 (OR)': [
+                    f"{odds_ratios.get('Glucose', 1.0):.3f}",
+                    f"{odds_ratios.get('Age_category_≥40岁', 1.0):.3f}",
+                    f"{odds_ratios.get('BMI', 1.0):.3f}",
+                    f"{odds_ratios.get('DiabetesPedigreeFunction', 1.0):.3f}",
+                ],
+                '风险解释': [
+                    '每增加一个单位，患病几率增加',
+                    '对比30岁以下人群，患病几率增加',
+                    '每增加一个单位，患病几率增加',
+                    '每增加一个单位，患病几率增加',
+                ]
             }
 
-            df_metrics = pd.DataFrame(metrics_data)
+            df_metrics = pd.DataFrame(key_risk_data)
             st.dataframe(df_metrics, use_container_width=True, hide_index=True)
 
         else:
