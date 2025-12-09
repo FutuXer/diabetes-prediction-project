@@ -1,0 +1,4 @@
+Model,R2,RMSE,MAE
+Linear Regression (Baseline),0.3417,38.6614,31.6654
+Ridge Regression (Optimal),0.3416,38.6637,31.7402
+Lasso Regression (Optimal),0.3417,38.6626,31.6882
