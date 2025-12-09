@@ -1,0 +1,29 @@
+=== 逻辑回归分类模型评估报告 ===
+
+测试集准确率 (Accuracy): 0.7078
+测试集AUC得分 (AUC Score): 0.8046
+
+--- 分类报告 (Classification Report) ---
+              precision    recall  f1-score   support
+
+     非患病 (0)       0.77      0.79      0.78       100
+      患病 (1)       0.59      0.56      0.57        54
+
+    accuracy                           0.71       154
+   macro avg       0.68      0.67      0.67       154
+weighted avg       0.70      0.71      0.71       154
+
+--- 混淆矩阵 (Confusion Matrix) ---
+[[79 21]
+ [24 30]]
+
+--- 特征系数 (Coefficient) 与 优势比 (Odds Ratio) ---
+                 Feature  Coefficient  Odds_Ratio
+                 Glucose       0.7780      2.1772
+                     BMI       0.4252      1.5299
+             Pregnancies       0.2405      1.2719
+DiabetesPedigreeFunction       0.2053      1.2280
+                 Insulin       0.1737      1.1897
+                     Age       0.1143      1.1211
+           SkinThickness       0.0878      1.0918
+           BloodPressure       0.0335      1.0341

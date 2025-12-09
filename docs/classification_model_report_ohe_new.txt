@@ -1,0 +1,46 @@
+=== 逻辑回归分类模型评估报告 (OHE + 阈值分析) ===
+
+测试集 AUC 得分 (AUC Score): 0.8226
+
+--- A. 默认阈值 (0.50) 性能 ---
+准确率 (Accuracy): 0.7532
+              precision    recall  f1-score   support
+
+     非患病 (0)       0.79      0.84      0.82       100
+      患病 (1)       0.67      0.59      0.63        54
+
+    accuracy                           0.75       154
+   macro avg       0.73      0.72      0.72       154
+weighted avg       0.75      0.75      0.75       154
+混淆矩阵:
+[[84 16]
+ [22 32]]
+
+--- B. 多阈值性能对比 (重点关注召回率) ---
+目标：提高 Recall (降低 FN)，同时控制 FP 增加。
+Threshold (T) Recall (患病召回率) Precision (患病精确率)  FN (漏诊)  FP (误诊) Accuracy
+         0.50         0.5926            0.6667       22       16   0.7532
+         0.48         0.5926            0.6667       22       16   0.7532
+         0.45         0.6667            0.6923       18       16   0.7792
+         0.42         0.6667            0.6316       18       21   0.7468
+         0.40         0.7037            0.6129       16       24   0.7403
+         0.35         0.7593            0.6119       13       26   0.7468
+
+--- C. 特征系数 (Coefficient) 与 优势比 (Odds Ratio) ---
+                  Feature  Coefficient  Odds_Ratio
+        Age_category_≥40岁       1.3140      3.7211
+                  Glucose       1.1921      3.2941
+                      BMI       0.7914      2.2064
+      Age_category_30-40岁       0.6372      1.8913
+ DiabetesPedigreeFunction       0.2531      1.2880
+              Pregnancies       0.1837      1.2017
+ Pregnancies_category_≥8次       0.1301      1.1390
+                  Insulin       0.0677      1.0700
+            SkinThickness       0.0325      1.0331
+            BloodPressure      -0.0454      0.9556
+                      Age      -0.2565      0.7738
+       BMI_category_32-37      -0.3082      0.7348
+Pregnancies_category_1-3次      -0.3418      0.7105
+Pregnancies_category_4-7次      -0.4861      0.6150
+         BMI_category_<27      -0.8181      0.4413
+         BMI_category_≥37      -0.8634      0.4217
