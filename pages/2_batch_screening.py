@@ -11,6 +11,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from io import StringIO
 import warnings
+from src.model_predictor import predict_risk, OPTIMAL_THRESHOLD
 
 warnings.filterwarnings('ignore')
 
@@ -22,62 +23,39 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 现代化CSS样式
-st.markdown("""
-<style>
-    .hero-title {
-        font-size: 2.5rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-align: center;
-        margin-bottom: 1rem;
-    }
-
-    .upload-container {
-        background: white;
-        padding: 2rem;
-        border-radius: 16px;
-        border: 2px dashed #667eea;
-        text-align: center;
-        margin: 2rem 0;
-        transition: all 0.3s ease;
-    }
-
-    .upload-container:hover {
-        border-color: #764ba2;
-        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    }
-
-    .stats-card {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        border: 1px solid #e5e7eb;
-        text-align: center;
-    }
-
-    .result-table {
-        background: white;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .step-container {
-        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-        padding: 1rem;
-        border-radius: 12px;
-        margin-bottom: 1rem;
-        border-left: 4px solid #3b82f6;
-    }
-</style>
-""", unsafe_allow_html=True)
+# 导入统一的UI样式系统
+from src.ui_styles import apply_flat_theme, create_hero_section
 
 def calculate_risk_score(row):
-    """计算风险评分（示例函数）"""
+    """使用训练好的回归模型计算风险评分"""
+    try:
+        # 将行数据转换为字典格式
+        input_data = {
+            'Pregnancies': row.get('Pregnancies', 1),
+            'Glucose': row.get('Glucose', 100),
+            'BloodPressure': row.get('BloodPressure', 70),
+            'SkinThickness': row.get('SkinThickness', 20),
+            'Insulin': row.get('Insulin', 80),
+            'BMI': row.get('BMI', 25.0),
+            'DiabetesPedigreeFunction': row.get('DiabetesPedigreeFunction', 0.5),
+            'Age': row.get('Age', 35)
+        }
+
+        # 使用模型预测
+        risk_score, final_prediction, odds_ratios = predict_risk(input_data)
+
+        if risk_score is None:
+            # 如果模型预测失败，使用备用方案
+            return calculate_backup_score(row)
+
+        return min(100, max(0, risk_score))
+
+    except Exception as e:
+        st.warning(f"模型预测失败，使用备用计算方法: {str(e)}")
+        return calculate_backup_score(row)
+
+def calculate_backup_score(row):
+    """备用风险评分计算（当模型不可用时）"""
     score = 20  # 基础分
 
     # 血糖因子
@@ -145,9 +123,14 @@ def validate_csv_format(df):
 def main():
     """主函数"""
 
+    # 应用扁平化主题
+    apply_flat_theme()
+
     # 页面标题
-    st.markdown('<h1 class="hero-title">📊 批量数据筛查</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="text-align: center; color: #6b7280; margin-bottom: 2rem;">上传CSV文件进行批量预测，生成详细筛查报告</p>', unsafe_allow_html=True)
+    create_hero_section(
+        title="批量数据筛查",
+        subtitle="上传CSV文件进行批量预测，生成详细筛查报告"
+    )
 
     # 侧边栏导航
     st.sidebar.markdown("""
@@ -255,12 +238,53 @@ def main():
                         # 复制数据用于预测
                         result_df = df.copy()
 
-                        # 计算风险评分
-                        result_df['风险评分'] = result_df.apply(calculate_risk_score, axis=1)
-                        result_df['风险等级'] = result_df['风险评分'].apply(get_risk_category)
+                        # 使用模型进行批量预测
+                        risk_scores = []
+                        disease_probabilities = []
+                        predictions = []
 
-                        # 计算患病概率（示例）
-                        result_df['患病概率'] = result_df['风险评分'] / 100
+                        progress_bar = st.progress(0)
+                        status_text = st.empty()
+
+                        for i, (_, row) in enumerate(result_df.iterrows()):
+                            progress = (i + 1) / len(result_df)
+                            progress_bar.progress(progress)
+                            status_text.text(f"正在处理第 {i+1}/{len(result_df)} 个样本...")
+
+                            # 构建输入数据
+                            input_data = {
+                                'Pregnancies': row.get('Pregnancies', 1),
+                                'Glucose': row.get('Glucose', 100),
+                                'BloodPressure': row.get('BloodPressure', 70),
+                                'SkinThickness': row.get('SkinThickness', 20),
+                                'Insulin': row.get('Insulin', 80),
+                                'BMI': row.get('BMI', 25.0),
+                                'DiabetesPedigreeFunction': row.get('DiabetesPedigreeFunction', 0.5),
+                                'Age': row.get('Age', 35)
+                            }
+
+                            # 使用模型预测
+                            risk_score, prediction, odds_ratios = predict_risk(input_data)
+
+                            if risk_score is not None:
+                                risk_scores.append(risk_score)
+                                disease_probabilities.append(risk_score / 100)  # 归一化到0-1
+                                predictions.append("有糖尿病" if prediction == 1 else "无糖尿病")
+                            else:
+                                # 备用计算
+                                backup_score = calculate_backup_score(row)
+                                risk_scores.append(backup_score)
+                                disease_probabilities.append(backup_score / 100)
+                                predictions.append("有糖尿病" if backup_score > 50 else "无糖尿病")
+
+                        progress_bar.empty()
+                        status_text.empty()
+
+                        # 添加预测结果到数据框
+                        result_df['风险评分'] = risk_scores
+                        result_df['患病概率'] = disease_probabilities
+                        result_df['预测结果'] = predictions
+                        result_df['风险等级'] = result_df['风险评分'].apply(get_risk_category)
 
                         st.success("✅ 预测完成！")
 
@@ -279,6 +303,7 @@ def main():
                     st.markdown("#### 📊 筛查统计概览")
 
                     risk_counts = result_df['风险等级'].value_counts()
+                    disease_counts = result_df['预测结果'].value_counts()
 
                     col1, col2, col3, col4 = st.columns(4)
 
@@ -286,19 +311,18 @@ def main():
                         st.metric("总样本数", len(result_df))
 
                     with col2:
-                        low_risk = risk_counts.get('低风险', 0)
-                        low_risk_pct = round(low_risk / len(result_df) * 100, 1)
-                        st.metric("低风险", str(low_risk) + " (" + str(low_risk_pct) + "%)")
+                        diabetes_count = disease_counts.get('有糖尿病', 0)
+                        diabetes_pct = round(diabetes_count / len(result_df) * 100, 1)
+                        st.metric("预测患病", str(diabetes_count) + " (" + str(diabetes_pct) + "%)")
 
                     with col3:
-                        medium_risk = risk_counts.get('中等风险', 0)
-                        medium_risk_pct = round(medium_risk / len(result_df) * 100, 1)
-                        st.metric("中等风险", str(medium_risk) + " (" + str(medium_risk_pct) + "%)")
+                        healthy_count = disease_counts.get('无糖尿病', 0)
+                        healthy_pct = round(healthy_count / len(result_df) * 100, 1)
+                        st.metric("预测健康", str(healthy_count) + " (" + str(healthy_pct) + "%)")
 
                     with col4:
-                        high_risk = risk_counts.get('高风险', 0)
-                        high_risk_pct = round(high_risk / len(result_df) * 100, 1)
-                        st.metric("高风险", str(high_risk) + " (" + str(high_risk_pct) + "%)")
+                        avg_risk = round(result_df['风险评分'].mean(), 1)
+                        st.metric("平均风险评分", str(avg_risk) + "分")
 
                     # 风险分布图
                     st.markdown("#### 📈 风险分布")

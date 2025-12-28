@@ -79,8 +79,8 @@ st.markdown("""
 
 def create_confusion_matrix():
     """创建混淆矩阵"""
-    # 示例数据（实际应该从模型评估中获取）
-    confusion_data = np.array([[85, 15], [12, 88]])  # TN, FP, FN, TP
+    # 使用真实的模型评估数据
+    confusion_data = np.array([[84, 16], [22, 32]])  # TN, FP, FN, TP
 
     fig = go.Figure(data=go.Heatmap(
         z=confusion_data,
@@ -324,20 +324,20 @@ def main():
 
         with col1:
             st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-            st.markdown('<div class="metric-value">0.82</div>', unsafe_allow_html=True)
+            st.markdown('<div class="metric-value">0.34</div>', unsafe_allow_html=True)
             st.markdown("R² 决定系数")
             st.markdown('</div>', unsafe_allow_html=True)
 
         with col2:
             st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-            st.markdown('<div class="metric-value">8.5</div>', unsafe_allow_html=True)
+            st.markdown('<div class="metric-value">38.7</div>', unsafe_allow_html=True)
             st.markdown("RMSE 均方根误差")
             st.markdown('</div>', unsafe_allow_html=True)
 
         with col3:
             st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-            st.markdown('<div class="metric-value">0.85</div>', unsafe_allow_html=True)
-            st.markdown("交叉验证分数")
+            st.markdown('<div class="metric-value">31.7</div>', unsafe_allow_html=True)
+            st.markdown("MAE 平均绝对误差")
             st.markdown('</div>', unsafe_allow_html=True)
 
     # ==================== Tab 3: 分类模型 =====================
@@ -409,25 +409,25 @@ def main():
 
         with col1:
             st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-            st.markdown('<div class="metric-value">85.3%</div>', unsafe_allow_html=True)
+            st.markdown('<div class="metric-value">75.3%</div>', unsafe_allow_html=True)
             st.markdown("准确率")
             st.markdown('</div>', unsafe_allow_html=True)
 
         with col2:
             st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-            st.markdown('<div class="metric-value">82.5%</div>', unsafe_allow_html=True)
+            st.markdown('<div class="metric-value">66.7%</div>', unsafe_allow_html=True)
             st.markdown("精确率")
             st.markdown('</div>', unsafe_allow_html=True)
 
         with col3:
             st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-            st.markdown('<div class="metric-value">88.1%</div>', unsafe_allow_html=True)
+            st.markdown('<div class="metric-value">66.7%</div>', unsafe_allow_html=True)
             st.markdown("召回率")
             st.markdown('</div>', unsafe_allow_html=True)
 
         with col4:
             st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-            st.markdown('<div class="metric-value">0.85</div>', unsafe_allow_html=True)
+            st.markdown('<div class="metric-value">0.82</div>', unsafe_allow_html=True)
             st.markdown("AUC得分")
             st.markdown('</div>', unsafe_allow_html=True)
 
@@ -449,12 +449,12 @@ def main():
             <div class="info-box">
                 <h4>混淆矩阵解读</h4>
                 <ul>
-                    <li><strong>真阴性(TN):</strong> 85例 - 正确识别非糖尿病</li>
-                    <li><strong>假阳性(FP):</strong> 15例 - 误诊为糖尿病</li>
-                    <li><strong>假阴性(FN):</strong> 12例 - 漏诊糖尿病</li>
-                    <li><strong>真阳性(TP):</strong> 88例 - 正确识别糖尿病</li>
+                    <li><strong>真阴性(TN):</strong> 84例 - 正确识别非糖尿病</li>
+                    <li><strong>假阳性(FP):</strong> 16例 - 误诊为糖尿病</li>
+                    <li><strong>假阴性(FN):</strong> 22例 - 漏诊糖尿病</li>
+                    <li><strong>真阳性(TP):</strong> 32例 - 正确识别糖尿病</li>
                 </ul>
-                <p><strong>临床关注重点：</strong>降低假阴性率，避免漏诊</p>
+                <p><strong>临床关注重点：</strong>降低假阴性率，避免漏诊（FN=22需要关注）</p>
             </div>
             """, unsafe_allow_html=True)
 

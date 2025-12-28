@@ -23,61 +23,11 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 现代化CSS样式
-st.markdown("""
-<style>
-    .hero-title {
-        font-size: 2.5rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-align: center;
-        margin-bottom: 1rem;
-    }
-
-    .risk-low {
-        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-        border-left: 4px solid #10b981;
-        padding: 1.5rem;
-        border-radius: 12px;
-        margin: 1rem 0;
-    }
-
-    .risk-medium {
-        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-        border-left: 4px solid #f59e0b;
-        padding: 1.5rem;
-        border-radius: 12px;
-        margin: 1rem 0;
-    }
-
-    .risk-high {
-        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-        border-left: 4px solid #ef4444;
-        padding: 1.5rem;
-        border-radius: 12px;
-        margin: 1rem 0;
-    }
-
-    .input-container {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        border: 1px solid #e5e7eb;
-        margin-bottom: 1rem;
-    }
-
-    .result-card {
-        background: white;
-        padding: 2rem;
-        border-radius: 16px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        border: 1px solid #e5e7eb;
-        text-align: center;
-    }
-</style>
-""", unsafe_allow_html=True)
+# 导入统一的UI样式系统
+from src.ui_styles import (
+    apply_flat_theme, create_hero_section, create_risk_level_display,
+    DiabetesUITheme
+)
 
 def create_risk_gauge(risk_score):
     """创建风险评分仪表盘"""
@@ -133,9 +83,14 @@ def get_risk_level(score, threshold):  # ✅ 接受 2 个参数
 def main():
     """主函数"""
 
+    # 应用扁平化主题
+    apply_flat_theme()
+
     # 页面标题
-    st.markdown('<h1 class="hero-title">📝 个人风险评估</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="text-align: center; color: #6b7280; margin-bottom: 2rem;">输入8项体检指标，获取个性化风险评估</p>', unsafe_allow_html=True)
+    create_hero_section(
+        title="个人风险评估",
+        subtitle="输入8项体检指标，获取个性化风险评估"
+    )
 
     # 侧边栏导航
     st.sidebar.markdown("""
@@ -295,47 +250,34 @@ def main():
             st.markdown('</div>', unsafe_allow_html=True)
 
             # 风险等级和建议
-            if risk_score < 30:
-                st.markdown(f"""
-                <div class="risk-low">
-                    <h3>{risk_icon} {risk_level}</h3>
-                    <p><strong>您的风险评分：{risk_score}分</strong></p>
-                    <p>{risk_advice}</p>
-                    <ul>
-                        <li>继续保持健康的生活方式</li>
-                        <li>每年进行一次健康检查</li>
-                        <li>均衡饮食，适量运动</li>
-                    </ul>
-                </div>
-                """, unsafe_allow_html=True)
-            elif risk_score < 70:
-                st.markdown(f"""
-                <div class="risk-medium">
-                    <h3>{risk_icon} {risk_level}</h3>
-                    <p><strong>您的风险评分：{risk_score}分</strong></p>
-                    <p>{risk_advice}</p>
-                    <ul>
-                        <li>建议每6个月检查一次血糖</li>
-                        <li>控制体重，增加运动量</li>
-                        <li>减少高糖食物摄入</li>
-                        <li>咨询医生制定预防计划</li>
-                    </ul>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.markdown(f"""
-                <div class="risk-high">
-                    <h3>{risk_icon} {risk_level}</h3>
-                    <p><strong>您的风险评分：{risk_score}分</strong></p>
-                    <p>{risk_advice}</p>
-                    <ul>
-                        <li><strong>立即就医</strong>，进行详细检查</li>
-                        <li>严格执行饮食控制</li>
-                        <li>加强血糖监测</li>
-                        <li>遵从医生的治疗建议</li>
-                    </ul>
-                </div>
-                """, unsafe_allow_html=True)
+            advice_details = {
+                "低风险": [
+                    "继续保持健康的生活方式",
+                    "每年进行一次健康检查",
+                    "均衡饮食，适量运动"
+                ],
+                "中等风险": [
+                    "建议每6个月检查一次血糖",
+                    "控制体重，增加运动量",
+                    "减少高糖食物摄入",
+                    "咨询医生制定预防计划"
+                ],
+                "高风险": [
+                    "<strong>立即就医</strong>，进行详细检查",
+                    "严格执行饮食控制",
+                    "加强血糖监测",
+                    "遵从医生的治疗建议"
+                ]
+            }
+
+            # 使用新的风险等级显示组件
+            create_risk_level_display(risk_score, risk_level, risk_advice)
+
+            # 显示详细建议
+            if risk_level in advice_details:
+                st.markdown("#### 💡 详细建议")
+                for advice in advice_details[risk_level]:
+                    st.markdown(f"• {advice}")
 
             # 详细指标分析
             st.markdown("### 📈 指标分析")
