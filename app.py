@@ -260,6 +260,7 @@ def main():
     # 核心功能卡片
     st.markdown("## 🎯 核心功能")
 
+    # 第一行 - 核心功能
     col1, col2 = st.columns(2)
 
     with col1:
@@ -288,10 +289,10 @@ def main():
         if st.button("📊 批量数据筛查", use_container_width=True, key="batch_btn"):
             st.switch_page("pages/2_batch_screening.py")
 
-    # 第二行 - 数据分析功能
+    # 第二行 - 数据分析和文档功能
     st.markdown("<br>", unsafe_allow_html=True)
 
-    col3, col4 = st.columns(2)
+    col3, col4, col5 = st.columns(3)
 
     with col3:
         # 数据可视化分析
@@ -307,17 +308,31 @@ def main():
             st.switch_page("pages/4_data-observation.py")
 
     with col4:
-        # 交互式数据探索
+        # 模型说明
         st.markdown("""
-        <div class="feature-card" onclick="window.location.href='?page=interactive_insights'">
-            <div class="feature-icon">🔍</div>
-            <div class="feature-title">交互式数据探索</div>
-            <div class="feature-desc">使用高级交互式图表深入分析数据特征</div>
+        <div class="feature-card" onclick="window.location.href='?page=model_documentation'">
+            <div class="feature-icon">📖</div>
+            <div class="feature-title">模型说明</div>
+            <div class="feature-desc">了解预测模型的原理、性能和技术细节</div>
         </div>
         """, unsafe_allow_html=True)
 
-        if st.button("🔍 交互式数据探索", use_container_width=True, key="interactive_btn"):
-            st.switch_page("pages/interactive_data_insights.py")
+        if st.button("📖 模型说明", use_container_width=True, key="model_btn"):
+            st.switch_page("pages/5_model_documentation.py")
+
+    with col5:
+        # 数据集介绍
+        st.markdown("""
+        <div class="feature-card" onclick="window.location.href='?page=dataset_info'">
+            <div class="feature-icon">💾</div>
+            <div class="feature-title">数据集介绍</div>
+            <div class="feature-desc">了解Pima Indians糖尿病数据集的详细信息</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if st.button("💾 数据集介绍", use_container_width=True, key="dataset_btn"):
+            st.switch_page("pages/6_dataset_info.py")
+
 
     # 系统统计信息
     st.markdown("## 📊 系统能力展示")
@@ -412,45 +427,33 @@ def main():
             """, unsafe_allow_html=True)
 
     with col2:
-        # 右侧：技术栈和团队分工
+        # 右侧：项目信息
         st.markdown("""
         <div style="background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); color: #4338ca; padding: 0.75rem 1.5rem; border-radius: 12px; font-weight: 600; margin-bottom: 1.5rem; text-align: center;">
-            🛠️ 技术栈
+            📊 项目信息
         </div>
         """, unsafe_allow_html=True)
 
-        st.markdown("### 💻 技术栈")
+        st.markdown("### 🎯 项目目标")
+        st.markdown("""
+        基于Pima印第安人糖尿病数据集，构建统计模型，实现：
+        - 个性化风险评估
+        - 批量数据筛查
+        - 数据可视化分析
+        - 临床决策支持
+        """)
 
-        tech_info_col1, tech_info_col2 = st.columns(2)
+        st.markdown("### 📈 数据集规模")
 
-        with tech_info_col1:
-            st.metric("前端", "Streamlit")
-            st.metric("后端", "Python 3.9+")
-            st.metric("数据处理", "Pandas, NumPy")
+        col_info1, col_info2, col_info3 = st.columns(3)
 
-        with tech_info_col2:
-            st.metric("机器学习", "Scikit-learn")
-            st.metric("可视化", "Matplotlib, Plotly")
+        with col_info1:
+            st.metric("样本数量", "768例")
 
-        
-    # 快速导航
-    st.markdown("---")
-    st.markdown("## 🧭 快速导航")
+        with col_info2:
+            st.metric("特征数量", "8个")
 
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        if st.button("📖 模型说明", use_container_width=True):
-            st.switch_page("pages/5_model_documentation.py")
-
-    with col2:
-        if st.button("💾 数据集介绍", use_container_width=True):
-            st.switch_page("pages/6_dataset_info.py")
-
-    with col3:
-        if st.button("👥 关于团队", use_container_width=True):
-            st.switch_page("pages/7_about_team.py")
-
-    
+        with col_info3:
+            st.metric("患病率", "34.9%")
 if __name__ == "__main__":
     main()

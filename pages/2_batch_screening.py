@@ -150,29 +150,26 @@ def main():
     st.markdown('<p style="text-align: center; color: #6b7280; margin-bottom: 2rem;">上传CSV文件进行批量预测，生成详细筛查报告</p>', unsafe_allow_html=True)
 
     # 侧边栏导航
-    st.sidebar.markdown("""
-    <div style="background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-                padding: 1rem; border-radius: 12px; margin-bottom: 1rem;">
-        <h4 style="color: #1f2937; margin-bottom: 0.5rem;">📋 页面导航</h4>
-        <div style="padding: 0.5rem; margin: 0.25rem 0;
-                    border-radius: 8px; cursor: pointer;
-                    border-left: 3px solid transparent;"
-                    onclick="window.location.href='/?page=personal_assessment'">
-            <span style="color: #374151;">📝 个人风险评估</span>
-        </div>
-        <div style="padding: 0.5rem; margin: 0.25rem 0;
-                    border-radius: 8px; border-left: 3px solid #667eea;
-                    background: white;">
-            <span style="color: #374151;">📊 当前：批量数据筛查</span>
-        </div>
-        <div style="padding: 0.5rem; margin: 0.25rem 0;
-                    border-radius: 8px; cursor: pointer;
-                    border-left: 3px solid transparent;"
-                    onclick="window.location.href='/?page=data_observation'">
-            <span style="color: #374151;">📈 数据可视化分析</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.sidebar.markdown("### 📋 页面导航")
+
+    if st.sidebar.button("📝 个人风险评估", use_container_width=True):
+        st.switch_page("pages/1_personal_assessment.py")
+
+    if st.sidebar.button("📊 当前：批量数据筛查", disabled=True, use_container_width=True):
+        pass
+
+    if st.sidebar.button("📈 数据可视化分析", use_container_width=True):
+        st.switch_page("pages/4_data-observation.py")
+
+    if st.sidebar.button("🔍 交互式数据探索", use_container_width=True):
+        st.switch_page("pages/interactive_data_insights.py")
+
+    if st.sidebar.button("📖 模型说明", use_container_width=True):
+        st.switch_page("pages/5_model_documentation.py")
+
+    if st.sidebar.button("💾 数据集介绍", use_container_width=True):
+        st.switch_page("pages/6_dataset_info.py")
+
 
     # 主要内容
     st.markdown("### 🔄 批量筛查流程")

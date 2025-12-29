@@ -322,7 +322,7 @@ def main():
     try:
         viz = StreamlitVisualizer()
         df = viz.df
-        st.success("✅ 数据加载成功！", icon="✅")
+        st.success("数据加载成功！")
     except Exception as e:
         st.error(f"❌ 数据加载失败: {e}", icon="❌")
         st.stop()
@@ -713,35 +713,23 @@ def main():
         st.markdown("---")
         st.markdown("### 🔄 数据预处理流程")
 
-        st.markdown(f"""
-        <div class="info-box">
-            <h4 style="margin-top: 0; color: #1e40af;">📖 预处理步骤</h4>
-            <p style="margin: 0.5rem 0;"><strong>1️⃣ 缺失值处理：</strong></p>
-            <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
-                <li>识别生理学不合理的0值（血糖、血压、BMI等）</li>
-                <li>使用中位数或分组均值填充</li>
-                <li>保留原始数据分布特征</li>
-            </ul>
+        st.info("📖 预处理步骤")
+        st.markdown("**1️⃣ 缺失值处理：**")
+        st.markdown("- 识别生理学不合理的0值（血糖、血压、BMI等）")
+        st.markdown("- 使用中位数或分组均值填充")
+        st.markdown("- 保留原始数据分布特征")
 
-            <p style="margin: 0.5rem 0;"><strong>2️⃣ 异常值检测：</strong></p>
-            <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
-                <li>IQR方法检测统计异常值</li>
-                <li>医学合理性验证</li>
-                <li>区分测量误差与真实极值</li>
-            </ul>
+        st.markdown("**2️⃣ 异常值检测：**")
+        st.markdown("- IQR方法检测统计异常值")
+        st.markdown("- 医学合理性验证")
+        st.markdown("- 区分测量误差与真实极值")
 
-            <p style="margin: 0.5rem 0;"><strong>3️⃣ 数据标准化：</strong></p>
-            <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
-                <li>Z-score标准化</li>
-                <li>消除量纲影响</li>
-                <li>为建模做准备</li>
-            </ul>
+        st.markdown("**3️⃣ 数据标准化：**")
+        st.markdown("- Z-score标准化")
+        st.markdown("- 消除量纲影响")
+        st.markdown("- 为建模做准备")
 
-            <p style="margin: 0.5rem 0; color: #1e40af;">
-                <strong>🎯 预处理目标：</strong>提高数据质量，为后续统计建模提供可靠的数据基础
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("**🎯 预处理目标：** 提高数据质量，为后续统计建模提供可靠的数据基础")
 
         # 预处理前后对比（如果有的话）
         st.markdown("---")
@@ -1207,29 +1195,26 @@ def main():
     # 侧边栏
     with st.sidebar:
         # 页面导航
-        st.markdown("""
-        <div style="background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-                    padding: 1rem; border-radius: 12px; margin-bottom: 1rem;">
-            <h4 style="color: #1f2937; margin-bottom: 0.5rem;">📋 页面导航</h4>
-            <div style="padding: 0.5rem; margin: 0.25rem 0;
-                        border-radius: 8px; border-left: 3px solid #667eea;
-                        background: white;">
-                <span style="color: #374151;">📈 当前：数据可视化分析</span>
-            </div>
-            <div style="padding: 0.5rem; margin: 0.25rem 0;
-                        border-radius: 8px; cursor: pointer;
-                        border-left: 3px solid transparent;"
-                        onclick="window.location.href='/?page=interactive_insights'">
-                <span style="color: #374151;">🔍 交互式数据探索</span>
-            </div>
-            <div style="padding: 0.5rem; margin: 0.25rem 0;
-                        border-radius: 8px; cursor: pointer;
-                        border-left: 3px solid transparent;"
-                        onclick="window.location.href='/'">
-                <span style="color: #374151;">🏠 首页</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("### 📋 页面导航")
+
+        if st.sidebar.button("📝 个人风险评估", use_container_width=True):
+            st.switch_page("pages/1_personal_assessment.py")
+
+        if st.sidebar.button("📊 批量数据筛查", use_container_width=True):
+            st.switch_page("pages/2_batch_screening.py")
+
+        if st.sidebar.button("📈 当前：数据可视化分析", disabled=True, use_container_width=True):
+            pass
+
+        if st.sidebar.button("🔍 交互式数据探索", use_container_width=True):
+            st.switch_page("pages/interactive_data_insights.py")
+
+        if st.sidebar.button("📖 模型说明", use_container_width=True):
+            st.switch_page("pages/5_model_documentation.py")
+
+        if st.sidebar.button("💾 数据集介绍", use_container_width=True):
+            st.switch_page("pages/6_dataset_info.py")
+
 
         st.markdown("### ℹ️ 系统信息")
         st.markdown(f"""
