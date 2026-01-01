@@ -35,7 +35,7 @@ def test_optimized_gbr_model():
 
     # 假设数据路径与训练集在同一目录下
     TEST_DATA_PATH = '../data/processed/diabetes_test_normalized.csv'
-    MODEL_PATH = 'models/risk_score_model.pkl' # <-- 修改为这个新文件名
+    MODEL_PATH = 'models/risk_score_ridge_model.pkl' # <-- 修改为这个新文件名
 
     # 1. 加载测试数据
     try:

@@ -246,95 +246,72 @@ def main():
 
     # ==================== Tab 2: 回归模型 =====================
     with tab2:
-        st.markdown("### 📈 回归模型（风险评分）")
+        st.markdown("### 📈 岭回归风险评分模型评估")
 
-        # 模型原理
-        st.markdown("#### 🧮 模型原理")
-
+        # 1. 模型原理说明
+        st.markdown("#### 🧮 岭回归（Ridge Regression）原理")
         st.markdown("""
-        <div class="formula-box">
-            <h4>岭回归（Ridge Regression）公式：</h4>
-            <p>ŷ = β₀ + β₁x₁ + β₂x₂ + ... + β₈x₈</p>
-            <p><strong>目标：</strong> 最小化 ||y - Xβ||² + α||β||²</p>
-            <p><strong>优势：</strong> L2正则化处理多重共线性，提高模型稳定性</p>
+        <div style="background-color: #f0f2f6; padding: 20px; border-radius: 10px; border-left: 5px solid #ff4b4b;">
+            <p><strong>预测公式：</strong> Risk Score = 34.85 + Σ(βᵢ × Featureᵢ)</p>
+            <p><strong>正则化项 (L2)：</strong> α = 10</p>
+            <p>该模型通过引入惩罚项来压缩系数大小，有效解决了特征间的共线性问题，比普通线性回归更具鲁棒性。</p>
         </div>
         """, unsafe_allow_html=True)
 
-        # 特征系数
-        st.markdown("#### 📊 特征系数分析")
+        # 2. 特征系数与统计显著性
+        st.markdown("#### 📊 特征影响力与显著性分析")
 
-        # 示例特征系数数据
-        feature_coefficients = {
-            '特征': ['Glucose', 'BMI', 'Age', 'DiabetesPedigreeFunction', 'Insulin', 'BloodPressure', 'SkinThickness', 'Pregnancies'],
-            '系数': [0.45, 0.32, 0.28, 0.21, 0.15, 0.12, 0.08, 0.05],
-            '贡献度': [30, 20, 18, 15, 10, 8, 5, 3]
+        # 使用你提供的真实 JSON 数据
+        model_stats = {
+            '特征': ['Glucose', 'BMI', 'Pregnancies', 'DiabetesPedigreeFunction', 'Insulin', 'Age', 'BloodPressure',
+                     'SkinThickness'],
+            '标准化系数': [19.3585, 9.8618, 5.9576, 4.4252, 1.5846, 1.5830, -0.1838, -0.0493],
         }
+        df_stats = pd.DataFrame(model_stats)
 
-        df_coeffs = pd.DataFrame(feature_coefficients)
+        # 绘制 Plotly 横向柱状图
+        # 颜色逻辑：正值为红色/橙色，负值为蓝色
+        colors = ['#ef553b' if x > 0 else '#636efa' for x in df_stats['标准化系数']]
 
-        # 系数重要性图
         fig = go.Figure(data=[
             go.Bar(
-                x=df_coeffs['贡献度'],
-                y=df_coeffs['特征'],
+                x=df_stats['标准化系数'],
+                y=df_stats['特征'],
                 orientation='h',
-                marker=dict(
-                    color=df_coeffs['系数'],
-                    colorscale='Viridis',
-                    showscale=True,
-                    colorbar=dict(title="系数值")
-                )
+                marker_color=colors,
+                text=df_stats['标准化系数'].apply(lambda x: f"{x:.2f}"),
+                textposition='outside'
             )
         ])
 
         fig.update_layout(
-            title="特征重要性排序",
-            xaxis_title="贡献度 (%)",
-            yaxis_title="特征名称",
-            height=500,
-            width=700
+            title="标准化系数排行 (Standardized Coefficients)",
+            xaxis_title="对风险评分的影响强度 (Points)",
+            yaxis_title="特征",
+            height=450,
+            margin=dict(l=20, r=20, t=40, b=20),
+            yaxis={'categoryorder': 'total ascending'}  # 按系数大小排序
         )
-
         st.plotly_chart(fig, use_container_width=True)
 
-        # 系数解读
-        st.markdown("#### 🔍 系数医学解读")
+        # 3. 详细统计表
+        st.markdown("##### 🔬 参数详情")
+        st.dataframe(df_stats, use_container_width=True, hide_index=True)
 
-        interpretation_data = {
-            '特征': ['Glucose', 'BMI', 'Age', 'DiabetesPedigreeFunction'],
-            '系数值': [0.45, 0.32, 0.28, 0.21],
-            '医学意义': [
-                '血糖每增加1单位，风险评分增加0.45分',
-                'BMI每增加1单位，风险评分增加0.32分',
-                '年龄每增加1岁，风险评分增加0.28分',
-                '家族史每增加0.1，风险评分增加0.021分'
-            ]
-        }
+        # 4. 模型性能指标（带 F 检验）
+        st.markdown("#### 📉 模型全局性能")
 
-        st.dataframe(pd.DataFrame(interpretation_data), use_container_width=True, hide_index=True)
+        m_col1, m_col2, m_col3, m_col4 = st.columns(4)
 
-        # 模型性能
-        st.markdown("#### 📈 回归模型性能")
+        with m_col1:
+            st.metric("R² 决定系数", "0.248", delta="模型有一定解释力")
+        with m_col2:
+            st.metric("MAE 平均误差", " 33.4 分")
+        with m_col3:
+            st.metric("F-Statistic", "5.9737", help="反映模型整体显著性")
+        with m_col4:
+            st.metric("Prob (F)", "< 1.2775e-06", help="模型整体非常显著")
 
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-            st.markdown('<div class="metric-value">0.82</div>', unsafe_allow_html=True)
-            st.markdown("R² 决定系数")
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        with col2:
-            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-            st.markdown('<div class="metric-value">8.5</div>', unsafe_allow_html=True)
-            st.markdown("RMSE 均方根误差")
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        with col3:
-            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-            st.markdown('<div class="metric-value">0.85</div>', unsafe_allow_html=True)
-            st.markdown("交叉验证分数")
-            st.markdown('</div>', unsafe_allow_html=True)
 
     # ==================== Tab 3: 分类模型 =====================
     with tab3:
