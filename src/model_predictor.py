@@ -157,7 +157,24 @@ def preprocess_data(raw_data: dict) -> pd.DataFrame:
     return X_final.astype(float)
 
 
-# 7. 核心预测函数
+# 7. 概率转换函数
+def adjust_probability_display(raw_probability):
+    """
+    根据阈值调整概率显示，让大于0.45的概率显示为大于0.5
+    转换逻辑：
+    - prob ≤ 0.45: 映射到 0-0.5 范围
+    - prob > 0.45: 映射到 0.5-1.0 范围
+    """
+    if raw_probability <= OPTIMAL_THRESHOLD:
+        # 线性映射到 0-0.5 范围
+        adjusted_prob = raw_probability * (0.5 / OPTIMAL_THRESHOLD)
+    else:
+        # 线性映射到 0.5-1.0 范围
+        adjusted_prob = 0.5 + (raw_probability - OPTIMAL_THRESHOLD) * (0.5 / (1.0 - OPTIMAL_THRESHOLD))
+
+    return adjusted_prob
+
+# 8. 核心预测函数
 def predict_risk(raw_data: dict):
     """
     接收原始输入，返回风险概率、诊断结果和优势比。
@@ -173,12 +190,15 @@ def predict_risk(raw_data: dict):
 
         # 预测概率
         prediction_proba = best_classifier.predict_proba(X_final)[:, 1]
-        probability_of_diabetes = prediction_proba[0] * 100  # 转换为百分比
+        raw_probability = prediction_proba[0]  # 保持0-1范围用于分类判断
 
-        # 应用最佳阈值进行最终诊断
-        final_prediction = 1 if probability_of_diabetes / 100 >= OPTIMAL_THRESHOLD else 0
+        # 应用最佳阈值进行最终诊断（使用原始概率）
+        final_prediction = 1 if raw_probability >= OPTIMAL_THRESHOLD else 0
 
-        return probability_of_diabetes, final_prediction, odds_ratios
+        # 转换显示概率（用于前端展示）
+        display_probability = adjust_probability_display(raw_probability) * 100  # 转换为百分比
+
+        return display_probability, final_prediction, odds_ratios
 
     except Exception as e:
         st.error(f"预测失败：特征对齐或模型计算出错。详细错误: {e}")
