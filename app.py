@@ -260,8 +260,8 @@ def main():
     # 核心功能卡片
     st.markdown("## 🎯 核心功能")
 
-    # 第一行 - 核心功能
-    col1, col2 = st.columns(2)
+    # 第一行 - 核心功能 (3列)
+    col1, col2, col3 = st.columns(3)
 
     with col1:
         # 个人风险评估
@@ -289,12 +289,25 @@ def main():
         if st.button("📊 批量数据筛查", use_container_width=True, key="batch_btn"):
             st.switch_page("pages/2_batch_screening.py")
 
-    # 第二行 - 数据分析和文档功能
+    with col3:
+        # 交互式数据探索
+        st.markdown("""
+        <div class="feature-card" onclick="window.location.href='?page=interactive_data_insights'">
+            <div class="feature-icon">🔍</div>
+            <div class="feature-title">交互式数据探索</div>
+            <div class="feature-desc">深度挖掘数据特征，动态筛选和多维度分析</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if st.button("🔍 交互式数据探索", use_container_width=True, key="interactive_btn"):
+            st.switch_page("pages/interactive_data_insights.py")
+
+    # 第二行 - 数据分析和文档功能 (3列)
     st.markdown("<br>", unsafe_allow_html=True)
 
-    col3, col4, col5 = st.columns(3)
+    col4, col5, col6 = st.columns(3)
 
-    with col3:
+    with col4:
         # 数据可视化分析
         st.markdown("""
         <div class="feature-card" onclick="window.location.href='?page=data_observation'">
@@ -307,7 +320,7 @@ def main():
         if st.button("📈 数据可视化分析", use_container_width=True, key="data_btn"):
             st.switch_page("pages/4_data-observation.py")
 
-    with col4:
+    with col5:
         # 模型说明
         st.markdown("""
         <div class="feature-card" onclick="window.location.href='?page=model_documentation'">
@@ -320,7 +333,7 @@ def main():
         if st.button("📖 模型说明", use_container_width=True, key="model_btn"):
             st.switch_page("pages/5_model_documentation.py")
 
-    with col5:
+    with col6:
         # 数据集介绍
         st.markdown("""
         <div class="feature-card" onclick="window.location.href='?page=dataset_info'">
